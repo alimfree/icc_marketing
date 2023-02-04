@@ -20,7 +20,7 @@ class KhateebSerializer
       first_name: @khateeb.first_nm,
       last_name: @khateeb.last_nm,
       title: @kahteeb.title,
-      avatar: @khateeb.get_avatar_url(),
+      avatar: @khateeb.c(),
       post_count: @khateeb.get_post_count(),
       follower_count: @khateeb.get_follower_count(),
       followed_count: @khateeb.get_followed_count()

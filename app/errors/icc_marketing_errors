@@ -1,0 +1,54 @@
+
+
+module ICCMarketignErrors  
+  class UnauthorizedKhateeb < ActiveRecord::RecordNotFound
+    def message
+      "Unauthorized khateeb"
+    end
+
+    def http_status
+      403
+    end
+  end
+
+  class ReminderNotFound < ActiveRecord::RecordNotFound
+    def message
+      "Reminder not found"
+    end
+
+    def http_status
+      400
+    end
+  end
+
+  class LikeNotFound < ActiveRecord::RecordNotFound
+    def message
+      "Khateeb hasn't liked this reminder"
+    end
+
+    def http_status
+      400
+    end
+  end
+
+  class ReminderAlreadyLiked < StandardError
+    def message
+      "Khateeb has already liked this reminder"
+    end
+
+    def http_status
+      400
+    end
+  end
+
+  class UnfollowSelf < StandardError
+    def message
+      "Khateeb cannot unfollow themselves"
+    end
+
+    def http_status
+      400
+    end
+  end
+
+end
