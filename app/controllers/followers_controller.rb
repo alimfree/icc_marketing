@@ -1,7 +1,7 @@
 class FollowsController < ApplicationController
 
   unless Rails.env.development?()
-    rescue_from SupagramErrors::UnfollowSelf do |error|
+    rescue_from ICCMarketingErrors::UnfollowSelf do |error|
       render json: { errors: error.message }, status: error.http_status
     end
   end
@@ -29,7 +29,7 @@ class FollowsController < ApplicationController
   def destroy
     @khateeb = get_current_khateeb()
     if @khateeb.id == params[:follow][:followed_id]
-      raise SupagramErrors::UnfollowSelf
+      raise ICCMarketingErrors::UnfollowSelf
     @follow = Follow.find_by(follower_id: @khateeb.id, followed_id: params[:follow][:followed_id])
     respond_to_destroy_follow()
   end

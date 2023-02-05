@@ -16,7 +16,7 @@ class Khateeb < ApplicationRecord
 
   has_secure_password
 
-  validates :name, :username, :email, :password, {
+  validates :first_nm, :username, :email, :password, {
     presence: true
   }
 
@@ -50,11 +50,15 @@ class Khateeb < ApplicationRecord
   after_create :attach_default_avatar, :follow_self
 
   private def format_name
-    lowercase_name = self.name.downcase()
+    lowercase_name = self.title.downcae() + " " + self.first_nm.downcase() + " " + self.last_nm.downcase()
     capitalized_words = lowercase_name.split(" ").map() do |word|
       word.capitalize()
     end
-    self.name = capitalized_words.join(" ")
+    @name = capitalized_words.join(" ")
+  end
+
+  private def name
+    @name
   end
 
   private def attach_default_avatar

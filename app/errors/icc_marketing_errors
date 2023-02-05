@@ -1,6 +1,6 @@
 
 
-module ICCMarketignErrors  
+module ICCMarketingErrors  
   class UnauthorizedKhateeb < ActiveRecord::RecordNotFound
     def message
       "Unauthorized khateeb"

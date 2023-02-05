@@ -1,17 +1,17 @@
-class reminderSerializer
+class ReminderSerializer
 
-  def initialize(reminders:, user:)
+  def initialize(reminders:, khateeb:)
     @reminders = reminders
-    @user = user
-    @serialized_user = UserSerializer.new(user: user).serialize()
+    @khateeb = khateeb
+    @serialized_khateeb = KhateebSerializer.new(khateeb: khateeb).serialize()
   end
 
-  def serialize_with_user_as_json
-    serialize_with_user.to_json()
+  def serialize_with_khateeb_as_json
+    serialize_with_khateeb.to_json()
   end
 
-  def serialize_with_user
-    serialize().merge({ user: @serialized_user })
+  def serialize_with_khateeb
+    serialize().merge({ khateeb: @serialized_khateeb })
   end
 
   def serialize_as_json
@@ -41,20 +41,19 @@ class reminderSerializer
 
   private def serialize_reminder(reminder)
     {
-      id: reminder.id,
+      id: khateeb.id,
       image_url: reminder.get_image_url(),
       caption: reminder.caption,
       most_recent_likes: reminder.get_most_recent_likes(),
       like_count: reminder.likes.length,
       created_at: reminder.created_at,
-      liked_by_current_user: reminder.liked_by?(@user),
+      liked_by_current_khateeb: reminder.liked_by?(@khateeb),
       author: {
-        id: reminder.user.id,
-        username: reminder.user.username,
-        avatar: reminder.user.get_avatar_url(),
-        followed_by_current_user: reminder.user.followed_by?(@user)
+        id: reminder.khateeb.id,
+        username: reminder.khateeb.username,
+        avatar: reminder.khateeb.get_avatar_url(),
+        followed_by_current_khateeb: reminder.khateeb.followed_by?(@khateeb)
       }
-      title: reminder.title
     }
   end
 

@@ -1,60 +1,181 @@
-class ReminderSerializer
+class RemindersController < ApplicationController
 
-  def initialize(reminders:, khateeb:)
-    @reminders = reminders
-    @khateeb = khateeb
-    @serialized_khateeb = KhateebSerializer.new(khateeb: khateeb).serialize()
-  end
+  #Refactor into master error controller?
+  unless Rails.env.development?()
+    rescue_from class remindersController < ApplicationController
 
-  def serialize_with_khateeb_as_json
-    serialize_with_khateeb.to_json()
-  end
+  #Refactor into master error controller?
+  unless Rails.env.development?()
+    rescue_from ICCMarketingErrors::reminderNotFound do |error|
+      respond_to_error(error)
+    end
 
-  def serialize_with_khateeb
-    serialize().merge({ khateeb: @serialized_khateeb })
-  end
+    rescue_from ICCMarketingErrors::reminderAlreadyLiked do |error|
+      respond_to_error(error)
+    end
 
-  def serialize_as_json
-    serialize().to_json()
-  end
-  
-  def serialize
-    reminders_key = get_reminders_key()
-    { reminders_key => serialize_each_reminder() }
-  end
-
-  private def get_reminders_key
-    is_feed?() ? :reminders : :reminder
-  end
-
-  private def serialize_each_reminder
-    if is_feed?()
-      @reminders.map() { |reminder| serialize_reminder(reminder) }
-    else
-      serialize_reminder(@reminders)
+    rescue_from ICCMarketingErrors::LikeNotFound do |error|
+      respond_to_error(error)
     end
   end
 
-  private def is_feed?
-    @reminders.is_a?(ActiveRecord::AssociationRelation)
+  def show_feed
+    @khateeb = get_current_khateeb()
+    start_datetime = get_feed_start_datetime()
+    feed = @khateeb.get_followed_feed(start_datetime)
+    serializer = ReminderSerializer.new(reminders: feed, khateeb: @khateeb)
+    response = serializer.serialize_with_khateeb_as_json()
+    render json: response, status: 200
   end
 
-  private def serialize_reminder(reminder)
-    {
-      id: khateeb.id,
-      image_url: reminder.get_image_url(),
-      caption: reminder.caption,
-      most_recent_likes: reminder.get_most_recent_likes(),
-      like_count: reminder.likes.length,
-      created_at: reminder.created_at,
-      liked_by_current_khateeb: reminder.liked_by?(@khateeb),
-      author: {
-        id: reminder.khateeb.id,
-        username: reminder.khateeb.username,
-        avatar: reminder.khateeb.get_avatar_url(),
-        followed_by_current_khateeb: reminder.khateeb.followed_by?(@khateeb)
-      }
-    }
+  def create
+    @khateeb = get_current_khateeb()
+    params[:khateeb_id] = @khateeb.id
+    @reminder = reminder.create(reminder_params())
+    respond_to_reminder()
+  end
+
+  #Can FormData be set as the value of a "reminder" key?
+  private def reminder_params
+    params.permit(:khateeb_id, :caption, :image)
+  end
+
+  private def respond_to_reminder()
+    if @reminder.valid?()
+      reminder_serializer = reminderSerializer.new(reminders: @reminder, khateeb: @khateeb)
+      response = reminder_serializer.serialize_with_khateeb_as_json()
+      render json: response, status: 200
+    else
+      render json: { errors: reminder.errors }, status: 400
+    end
+  end
+
+  def like
+    @khateeb = get_current_khateeb()
+    @reminder = get_reminder_from_params()
+    params[:khateeb_id] = @khateeb.id
+    @like = Like.create(like_params())
+    respond_to_like_toggle()
+  end
+
+  def unlike
+    @khateeb = get_current_khateeb()
+    @reminder = get_reminder_from_params()
+    @like = Like.find_by(khateeb_id: @khateeb.id, reminder_id: @reminder.id)
+    # Is it better to raise the error with an if, or rescue the error when it occurs?
+    if !@like
+      raise ICCMarketingErrors::LikeNotFound
+    end
+    @like.destroy()
+    respond_to_like_toggle()
+  end
+
+  private def get_reminder_from_params
+    begin
+      reminder.find(params[:reminder_id])
+    rescue ActiveRecord::RecordNotFound
+      raise ICCMarketingErrors::reminderNotFound
+    end
+  end
+
+  private def like_params
+    params.permit(:khateeb_id, :reminder_id)
+  end
+
+  private def respond_to_like_toggle()
+    if @like.valid?()
+      reminder_serializer = reminderSerializer.new(reminders: @reminder, khateeb: @khateeb)
+      response = reminder_serializer.serialize_as_json()
+      render json: response
+    else
+      render json: { errors: @like.errors }, status: 400
+    end
+  end
+
+ends::reminderNotFound do |error|
+      respond_to_error(error)
+    end
+
+    rescue_from ICCMarketingErrors::reminderAlreadyLiked do |error|
+      respond_to_error(error)
+    end
+
+    rescue_from ICCMarketingErrors::LikeNotFound do |error|
+      respond_to_error(error)
+    end
+  end
+
+  def show_feed
+    @khateeb = get_current_khateeb()
+    start_datetime = get_feed_start_datetime()
+    feed = @khateeb.get_followed_feed(start_datetime)
+    serializer = reminderSerializer.new(reminders: feed, khateeb: @khateeb)
+    response = serializer.serialize_with_khateeb_as_json()
+    render json: response, status: 200
+  end
+
+  def create
+    @khateeb = get_current_khateeb()
+    params[:khateeb_id] = @khateeb.id
+    @reminder = reminder.create(reminder_params())
+    respond_to_reminder()
+  end
+
+  #Can FormData be set as the value of a "reminder" key?
+  private def reminder_params
+    params.permit(:khateeb_id, :caption, :image)
+  end
+
+  private def respond_to_reminder()
+    if @reminder.valid?()
+      reminder_serializer = reminderSerializer.new(reminders: @reminder, khateeb: @khateeb)
+      response = reminder_serializer.serialize_with_khateeb_as_json()
+      render json: response, status: 200
+    else
+      render json: { errors: reminder.errors }, status: 400
+    end
+  end
+
+  def like
+    @khateeb = get_current_khateeb()
+    @reminder = get_reminder_from_params()
+    params[:khateeb_id] = @khateeb.id
+    @like = Like.create(like_params())
+    respond_to_like_toggle()
+  end
+
+  def unlike
+    @khateeb = get_current_khateeb()
+    @reminder = get_reminder_from_params()
+    @like = Like.find_by(khateeb_id: @khateeb.id, reminder_id: @reminder.id)
+    # Is it better to raise the error with an if, or rescue the error when it occurs?
+    if !@like
+      raise SupagramErrors::LikeNotFound
+    end
+    @like.destroy()
+    respond_to_like_toggle()
+  end
+
+  private def get_reminder_from_params
+    begin
+      reminder.find(params[:reminder_id])
+    rescue ActiveRecord::RecordNotFound
+      raise SupagramErrors::reminderNotFound
+    end
+  end
+
+  private def like_params
+    params.permit(:khateeb_id, :reminder_id)
+  end
+
+  private def respond_to_like_toggle()
+    if @like.valid?()
+      reminder_serializer = reminderSerializer.new(reminders: @reminder, khateeb: @khateeb)
+      response = reminder_serializer.serialize_as_json()
+      render json: response
+    else
+      render json: { errors: @like.errors }, status: 400
+    end
   end
 
 end

@@ -5,7 +5,7 @@ class ApplicationController < ActionController::API
       render json: { errors: "Parameter missing" }, status: 400
     end
 
-    rescue_from ICCMarketignErrors::Unauthorizedkhateeb do |error|
+    rescue_from ICCMarketingErrors::Unauthorizedkhateeb do |error|
       render json: { errors: error.message }, status: error.http_status
     end
   end
@@ -15,7 +15,7 @@ class ApplicationController < ActionController::API
       khateeb_id = decode_token()["khateeb_id"]
       Khateeb.find(khateeb_id)
     rescue
-      raise ICCMarketignErrors::Unauthorizedkhateeb
+      raise ICCMarketingErrors::Unauthorizedkhateeb
     end
   end
 
